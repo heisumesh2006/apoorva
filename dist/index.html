@@ -2,11 +2,11 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
+	<meta charset="UTF-8" />
 	<title>CodePen - drawing flowers with Greensock</title>
-	<link rel="stylesheet" href="./style.css">
-
+	<link rel="stylesheet" href="./style.css" />
 </head>
+
 
 <body>
 	<!-- partial:index.partial.html -->
@@ -880,16 +880,18 @@
 		</svg>
 
 	</div>
+	<!-- partial -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+	<!-- Local DrawSVGPlugin (must be in the same folder as this file) -->
+	<script src="./DrawSVGPlugin.min.js"></script>
+
+	<!-- Your site script (must come after gsap + DrawSVGPlugin) -->
+	<script src="./script.js"></script>
 	<div id="message">
 		These flowers are for you 🌸💗
 	</div>
-
-	<!-- partial -->
-	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-	<script src='https://unpkg.co/gsap@3/dist/gsap.min.js'></script>
-	<script src='https://assets.codepen.io/16327/DrawSVGPlugin3.min.js'></script>
-	<script src="./script.js"></script>
-
 </body>
 
 </html>
