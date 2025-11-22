@@ -103,5 +103,5 @@ setTimeout(() => {
 
 /* BUTTON CLICK → REDIRECT */
 document.getElementById("nextBtn").addEventListener("click", () => {
-  window.location.href = "../birthday-site/index.html";
+  window.location.href = "/birthday-site/index.html";
 });

@@ -308,5 +308,5 @@ var tl = gsap
 
 // ⭐ AUTO REDIRECT WHEN FINISHED ⭐
 tl.eventCallback("onComplete", () => {
-  window.location.href = "../fireworks/fireworks-launcher.html"; // ← put your real final page name
+  window.location.href = "/fireworks/fireworks-launcher.html"; // ← put your real final page name
 });

@@ -32,5 +32,5 @@ const pc = butterfliesBackground({
 
 // 🔥 After 1 minute, go to the next page
 setTimeout(() => {
-  window.location.href = "../dist/index.html"; // change if needed
+  window.location.href = "/dist/index.html"; // change if needed
 }, 15000);
