@@ -412,7 +412,7 @@
 
       // redirect on complete
       tl.eventCallback("onComplete", function () {
-        // window.location.href = "/fireworks/fireworks-launcher.html";
+        window.location.href = "/fireworks/fireworks-launcher.html";
         console.log("Animation complete (redirect commented out in script).");
       });
     });
