@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <title>Fireworks Launcher</title>
+
+  <style>
+    body {
+      background: #f50000;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    p {
+      position: absolute;
+      top: 36%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Playfair Display', cursive;
+      font-size: 3.5rem;
+      color: white;
+      opacity: 0;
+      animation: fadeIn 4s ease-out;
+    }
+
+    #soundHint {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      color: #ffeaea;
+      font-family: sans-serif;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas></canvas>
+  <p>Fireworks For You</p>
+
+  <!-- Your fireworks audio file -->
+  <audio id="fireSound" src="fireworks.mpeg" loop></audio>
+
+  <div id="soundHint">🔊 Tap / click once to enable sound</div>
+
+  <script>
+    /* ----------------- Base Setup ----------------- */
+
+    var canvas = document.querySelector('canvas');
+    var c = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    var fireSound = document.getElementById("fireSound");
+    fireSound.loop = true;
+
+    // Enable sound on first user interaction
+    function enableSound() {
+      fireSound.play().catch(() => { });
+      document.removeEventListener("click", enableSound);
+      document.removeEventListener("touchstart", enableSound);
+      document.getElementById("soundHint").style.display = "none";
+    }
+    document.addEventListener("click", enableSound);
+    document.addEventListener("touchstart", enableSound);
+
+    /* ----------------- Cannon & Fireworks ----------------- */
+
+    function Cannon(x, y, width, height, color) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+      this.angle = 0;
+      this.color = color;
+
+      this.update = function () {
+        this.draw();
+      };
+
+      this.draw = function () {
+        c.save();
+        c.translate(this.x, this.y);
+        c.rotate(this.angle);
+
+        // Barrel
+        c.fillStyle = this.color;
+        c.shadowColor = this.color;
+        c.shadowBlur = 5;
+        c.fillRect(0, -this.height / 2, this.width, this.height);
+
+        // Base
+        c.fillStyle = "#dddddd";
+        c.shadowBlur = 0;
+        c.fillRect(-15, -5, 20, 10);
+
+        c.restore();
+      };
+    }
+
+    function Cannonball(x, y, dx, dy, radius, color, cannon, particleColors) {
+      this.x = x;
+      this.y = y;
+      this.dx = dx;
+      this.dy = dy;
+      this.radius = radius;
+      this.color = color;
+      this.particleColors = particleColors;
+      this.source = cannon;
+      this.timeToLive = 1.4 + Math.random() * 0.8;
+
+      this.init = function () {
+        this.x = this.source.x + Math.cos(this.source.angle) * this.source.width;
+        this.y = this.source.y + Math.sin(this.source.angle) * this.source.width;
+
+        var speed = 8 + Math.random() * 2;
+        this.dx = Math.cos(this.source.angle) * speed;
+        this.dy = Math.sin(this.source.angle) * speed;
+      };
+
+      this.update = function () {
+        this.dy += gravity;
+        this.x += this.dx;
+        this.y += this.dy;
+        this.draw();
+        this.timeToLive -= 0.01;
+
+        /* ⭐ FORCE EXPLOSION RULES ⭐ */
+        if (this.y < canvas.height * 0.18) this.timeToLive = 0;       // Explode at top
+        if (this.x < 0 || this.x > canvas.width) this.timeToLive = 0; // Explode if sideways
+      };
+
+      this.draw = function () {
+        c.save();
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.shadowBlur = 8;
+        c.shadowColor = this.color;
+        c.fillStyle = this.color;
+        c.fill();
+        c.restore();
+      };
+
+      this.init();
+    }
+
+    function Particle(x, y, dx, dy, radius, color) {
+      this.x = x;
+      this.y = y;
+      this.dx = dx;
+      this.dy = dy;
+      this.radius = radius;
+      this.color = color;
+      this.timeToLive = 1;
+
+      this.update = function () {
+        this.dy += gravity * 0.1;
+        this.x += this.dx;
+        this.y += this.dy;
+        this.draw();
+        this.timeToLive -= 0.01;
+      };
+
+      this.draw = function () {
+        c.save();
+        c.beginPath();
+        c.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        c.shadowBlur = 12;
+        c.shadowColor = this.color;
+        c.fillStyle = this.color;
+        c.fill();
+        c.restore();
+      };
+    }
+
+    function Explosion(cannonball) {
+      this.particles = [];
+      this.source = cannonball;
+
+      this.init = function () {
+        for (var i = 0; i < 45; i++) {
+          var angle = Math.random() * Math.PI * 2;
+          var speed = Math.random() * 5 + 1;
+          var dx = Math.cos(angle) * speed;
+          var dy = Math.sin(angle) * speed;
+
+          var pColor = this.source.particleColors[
+            Math.floor(Math.random() * this.source.particleColors.length)
+          ];
+
+          this.particles.push(new Particle(this.source.x, this.source.y, dx, dy, 2, pColor));
+        }
+      };
+
+      this.update = function () {
+        for (var i = 0; i < this.particles.length; i++) {
+          this.particles[i].update();
+          if (this.particles[i].timeToLive <= 0) {
+            this.particles.splice(i, 1);
+            i--;
+          }
+        }
+      };
+
+      this.init();
+    }
+
+    /* ----------------- Global Variables ----------------- */
+
+    var gravity = 0.04;
+    var cannon, cannonballs, explosions, colors;
+
+    function initVars() {
+      cannon = new Cannon(canvas.width / 2, canvas.height - 50, 60, 20, "white");
+      cannonballs = [];
+      explosions = [];
+      colors = [
+        {
+          cannonballColor: "#affdf4",
+          particleColors: ["#ff4747", "#00ceed", "#ffffff", "pink", "#ffd84d"]
+        }
+      ];
+    }
+
+    initVars();
+
+    /* Cannon Auto Rotation Left <-> Right */
+    var minAngle = -150 * Math.PI / 180;
+    var maxAngle = -30 * Math.PI / 180;
+    var angleDir = 1;
+    var angleSpeed = 0.022;
+    var currentAngle = minAngle;
+
+    var frame = 0;
+    var fireInterval = 3; // Faster shooting
+
+    window.addEventListener("resize", function () {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initVars();
+    });
+
+    /* ----------------- Animation Loop ----------------- */
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      c.fillStyle = "rgba(18, 18, 18, 0.25)";
+      c.fillRect(0, 0, canvas.width, canvas.height);
+
+      /* Rotate cannon */
+      currentAngle += angleSpeed * angleDir;
+      if (currentAngle > maxAngle) angleDir = -1;
+      if (currentAngle < minAngle) angleDir = 1;
+      cannon.angle = currentAngle;
+
+      cannon.update();
+
+      frame++;
+
+      /* AUTO SHOOT */
+      if (frame % fireInterval === 0) {
+        var pack = colors[0];
+        cannonballs.push(
+          new Cannonball(0, 0, 0, 0, 4, pack.cannonballColor, cannon, pack.particleColors)
+        );
+      }
+
+      /* Update balls */
+      for (let i = 0; i < cannonballs.length; i++) {
+        cannonballs[i].update();
+        if (cannonballs[i].timeToLive <= 0) {
+          explosions.push(new Explosion(cannonballs[i]));
+          cannonballs.splice(i, 1);
+          i--;
+        }
+      }
+
+      /* Update explosions */
+      for (let j = 0; j < explosions.length; j++) {
+        explosions[j].update();
+        if (explosions[j].particles.length <= 0) {
+          explosions.splice(j, 1);
+          j--;
+        }
+      }
+    }
+
+    animate();
+  </script>
+</body>
+
+</html>
